@@ -1,0 +1,47 @@
+services:
+  app1:
+    build: .
+    environment:
+      ROLE: backend
+      INSTANCE_ID: shopnow-1
+    command: ["php", "-S", "0.0.0.0:8000", "server.php"]
+    restart: unless-stopped
+
+  app2:
+    build: .
+    environment:
+      ROLE: backend
+      INSTANCE_ID: shopnow-2
+    command: ["php", "-S", "0.0.0.0:8000", "server.php"]
+    restart: unless-stopped
+
+  app3:
+    build: .
+    environment:
+      ROLE: backend
+      INSTANCE_ID: shopnow-3
+    command: ["php", "-S", "0.0.0.0:8000", "server.php"]
+    restart: unless-stopped
+
+  load-balancer:
+    build: .
+    environment:
+      ROLE: load_balancer
+      PORT: 8080
+      ALGORITHM: round_robin
+      BACKENDS: http://app1:8000,http://app2:8000,http://app3:8000
+      STATE_DIR: /state
+      PHP_CLI_SERVER_WORKERS: 8
+    command: ["php", "-S", "0.0.0.0:8080", "server.php"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - lb-state:/state
+    depends_on:
+      - app1
+      - app2
+      - app3
+    restart: unless-stopped
+
+volumes:
+  lb-state:
